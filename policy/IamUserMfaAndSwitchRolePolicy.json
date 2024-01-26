@@ -1,0 +1,93 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Condition": {
+                "Bool": {
+                    "aws:MultiFactorAuthPresent": "true"
+                }
+            },
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Effect": "Allow",
+            "Sid": "AllowCrossAccountSwitchRole"
+        },
+        {
+            "Condition": {
+                "Bool": {
+                    "aws:MultiFactorAuthPresent": "false"
+                }
+            },
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Effect": "Deny",
+            "Sid": "DenySwitchRoleIfNotIsAlreadySetMfa"
+        },
+        {
+            "Action": [
+                "iam:EnableMFADevice",
+                "iam:DeactivateMFADevice",
+                "iam:ResyncMFADevice"
+            ],
+            "Resource": "arn:aws:iam::*:user/${aws:username}",
+            "Effect": "Allow",
+            "Sid": "AllowSelfIamUserMfaDeviceControl"
+        },
+        {
+            "Action": [
+                "iam:CreateVirtualMFADevice",
+                "iam:DeleteVirtualMFADevice"
+            ],
+            "Resource": "arn:aws:iam::*:mfa/${aws:username}",
+            "Effect": "Allow",
+            "Sid": "AllowSelfMfaDeviceControl"
+        },
+        {
+            "Action": [
+                "codecommit:BatchGet*",
+                "codecommit:BatchDescribe*",
+                "codecommit:Describe*",
+                "codecommit:EvaluatePullRequestApprovalRules",
+                "codecommit:Get*",
+                "codecommit:List*",
+                "codecommit:GitPush",
+                "codecommit:GitPull"
+            ],
+            "Resource": "*",
+            "Effect": "Allow",
+            "Sid": "AllowCodeCommitLocalOperation"
+        },
+        {
+            "Action": [
+                "iam:DeleteSSHPublicKey",
+                "iam:GetSSHPublicKey",
+                "iam:ListSSHPublicKeys",
+                "iam:UpdateSSHPublicKey",
+                "iam:UploadSSHPublicKey"
+            ],
+            "Resource": "arn:aws:iam::*:user/${aws:username}",
+            "Effect": "Allow",
+            "Sid": "AllowManageOwnSSHPublicKeys"
+        },
+        {
+            "Action": [
+                "iam:CreateServiceSpecificCredential",
+                "iam:DeleteServiceSpecificCredential",
+                "iam:ListServiceSpecificCredentials",
+                "iam:ResetServiceSpecificCredential",
+                "iam:UpdateServiceSpecificCredential"
+            ],
+            "Resource": "arn:aws:iam::*:user/${aws:username}",
+            "Effect": "Allow",
+            "Sid": "AllowManageOwnGitCredentials"
+        }
+    ]
+}
