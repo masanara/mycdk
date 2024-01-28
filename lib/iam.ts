@@ -1,12 +1,14 @@
-import { App, Stack, StackProps, CfnOutput, SecretValue }  from 'aws-cdk-lib';
+import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as fs from 'fs';
+import { IGroupDef } from '../interfaces';
 
+const path=('../users.json');
 const policyDocument = JSON.parse(fs.readFileSync('./policy/IamUserMfaAndSwitchRolePolicy.json','utf-8'));
-const usersDef = JSON.parse(fs.readFileSync('./users.json','utf-8'));
+const usersDef: IGroupDef[] = require(path);
 
-export class IamStack extends Stack {
-    constructor(scope: App, id: string, props?: StackProps) {
+export class IamStack extends cdk.Stack {
+    constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const customPolicy = new iam.ManagedPolicy(this, 'IamUserMfaAndSwitchRolePolicy', {
@@ -23,7 +25,8 @@ export class IamStack extends Stack {
             const user = new iam.User(this, `${userName}_User`, {
                 userName,
                 groups: [group],
-                password: SecretValue.unsafePlainText(userName),
+                password: cdk.SecretValue.unsafePlainText(userName),
+                passwordResetRequired: true,
             });
             iamUsers.push(user.userArn);
         };

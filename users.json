@@ -1,7 +1,10 @@
 [
     {
         "groupName": "TKY_DEV",
-        "srcIp": "192.168.0.21/32",
+        "srcIp": [
+            "192.168.0.21/32",
+            "192.168.0.22/32"
+        ],
         "policies": [
             "IAMUserChangePassword",
             "IAMSelfManageServiceSpecificCredentials",
@@ -14,7 +17,9 @@
     },
     {
         "groupName": "BIZ_DEV",
-        "srcIp": "192.168.1.0/24",
+        "srcIp": [
+            "192.168.2.0/24"
+        ],
         "policies": [
             "IAMUserChangePassword",
             "IAMSelfManageServiceSpecificCredentials",
@@ -27,7 +32,10 @@
     },
     {
         "groupName": "SE_OPE",
-        "srcIp": "192.168.2.0/24",
+        "srcIp": [
+            "192.168.2.0/24",
+            "192.168.3.0/24"
+        ],
         "policies": [
             "IAMUserChangePassword",
             "IAMSelfManageServiceSpecificCredentials",
