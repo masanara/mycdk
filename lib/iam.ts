@@ -3,7 +3,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as fs from 'fs';
 import { IGroupDef } from '../interfaces';
 
-const path=('../users.json');
+const path=('../config/users.json');
 const policyDocument = JSON.parse(fs.readFileSync('./policy/IamUserMfaAndSwitchRolePolicy.json','utf-8'));
 const usersDef: IGroupDef[] = require(path);
 

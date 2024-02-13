@@ -1,8 +1,19 @@
-import { IIpAddresses } from "aws-cdk-lib/aws-ec2";
+import { IpAddresses } from "aws-cdk-lib/aws-ec2";
+//import { IIpAddresses } from "aws-cdk-lib/aws-ec2";
 
 export interface IGroupDef {
     "groupName": string,
-    "srcIp": IIpAddresses[],
+    "srcIp": IpAddresses[],
     "policies": string[],
     "userNames": string[],
+};
+
+export interface IInfraDef {
+    "namePrefix": string,
+    "bgpAsn": number,
+    "vpcCidr": string,
+    "tgwCidr": string,
+    "trustAccounts": string[],
+    "zoneName": string,
+    "srcIps": string[],
 };
