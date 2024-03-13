@@ -134,13 +134,13 @@ export class InfraStack extends cdk.Stack {
         }],
       });
 
+      // Associate Tgw and TgwRouteTable
       const tgwRouteTableAssociationSharedService = new ec2.CfnTransitGatewayRouteTableAssociation(this, "tgwRtbAssociationService", {
-      //const tgwRouteTableAssociationSharedService = new ec2.CfnTransitGatewayRoute(this, "tgwRtbAssociationService", {
         transitGatewayAttachmentId: transitGatewayAttachment.ref,
         transitGatewayRouteTableId: serviceRouteTable.ref,
-        //destinationCidrBlock: "0.0.0.0/0",
       });
 
+      /*
       const tgwRouteTableAssociationProd = new ec2.CfnTransitGatewayRouteTableAssociation(this, 'tgwRtbAssociationProd', {
         transitGatewayAttachmentId: transitGatewayAttachment.ref,
         transitGatewayRouteTableId: prodRouteTable.ref,
@@ -150,6 +150,7 @@ export class InfraStack extends cdk.Stack {
         transitGatewayAttachmentId: transitGatewayAttachment.ref,
         transitGatewayRouteTableId: devRouteTable.ref,
       });
+      */
 
     }
   }
