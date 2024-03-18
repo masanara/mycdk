@@ -77,19 +77,25 @@ export class InfraStack extends cdk.Stack {
 
       const vpc = new ec2.Vpc(this, 'vpc', {
         vpcName: namePrefix+'-vpc',
+        maxAzs: 2,
         ipAddresses: ec2.IpAddresses.cidr(infraDef.vpcCidr),
         createInternetGateway: false,
         enableDnsHostnames: true,
         enableDnsSupport: true,
         subnetConfiguration: [{
           cidrMask: 24,
-          name: namePrefix+'-',
+          name: namePrefix,
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         }]
       });
       vpc.addFlowLog('FlowLogsToS3',{
         destination: ec2.FlowLogDestination.toS3()
       });
+
+      // Create Transit Gateway Attachment for private subnets
+      const vpcSubnets = vpc.selectSubnets({
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
+      })
 
       // If zoneName is provided, enable Private Hosted Zone
       if ( infraDef.zoneName ) {
@@ -111,13 +117,18 @@ export class InfraStack extends cdk.Stack {
             route53InboundSG.addIngressRule(ec2.Peer.ipv4(srcIp), ec2.Port.udp(53),'Allow UDP 53');
           }
         }
+
+        // Creates a Route53 Resolver endpoint
+        const cfnResolverEndpoint = new route53resolver.CfnResolverEndpoint(this, 'resolverEndpoint', {
+          direction: 'inbound',
+          //ipAddresses: vpcSubnets.subnetIds.map((sn) => ({ subnetId: sn, ip: "ip" })),
+          ipAddresses: vpcSubnets.subnetIds.map((sn) => ({ subnetId: sn })),
+          securityGroupIds: [route53InboundSG.securityGroupId],
+          name: namePrefix+'-endpoint',
+        });
       }
 
       // Create Transit Gateway Attachment for private subnets
-      const vpcSubnets = vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
-      })
-
       const transitGatewayAttachment = new ec2.CfnTransitGatewayAttachment(this, 'transitGatewayAttachment', {
         transitGatewayId: transitGateway.ref,
         vpcId: vpc.vpcId,
@@ -130,7 +141,7 @@ export class InfraStack extends cdk.Stack {
         transportTransitGatewayAttachmentId: transitGatewayAttachment.ref,
         tags: [{
           key: 'Name',
-          value: 'value',
+          value: namePrefix+'-connect',
         }],
       });
 
