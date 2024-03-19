@@ -1,17 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
-import { aws_ram as ram } from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as route53resolver from 'aws-cdk-lib/aws-route53resolver';
+import { aws_ram as ram } from 'aws-cdk-lib';
 import { Construct, ConstructOrder } from 'constructs';
 import { IInfraDef } from '../interfaces';
-
 
 const path=('../config/infra.json');
 const infraDef: IInfraDef = require(path);
 const namePrefix = infraDef.namePrefix;
-
 
 const app = new cdk.App()
 export class InfraStack extends cdk.Stack {
@@ -53,21 +50,24 @@ export class InfraStack extends cdk.Stack {
     const serviceRouteTable = new ec2.CfnTransitGatewayRouteTable(this, "TGRouteTableService", {
       transitGatewayId: transitGateway.ref,
       tags: [{
-        key: 'Name', value: namePrefix+"-SharedServiceRouteDomain",
+        key: 'Name',
+        value: namePrefix+"_SharedServiceRouteDomain",
       }],
     });
 
     const prodRouteTable = new ec2.CfnTransitGatewayRouteTable(this, "TGRouteTableProd", {
       transitGatewayId: transitGateway.ref,
       tags: [{
-        key: 'Name', value: namePrefix+"-ProdRouteDomain",
+        key: 'Name',
+        value: namePrefix+"_ProdRouteDomain",
       }],
     });
 
     const devRouteTable = new ec2.CfnTransitGatewayRouteTable(this, "TGRouteTableDev", {
       transitGatewayId: transitGateway.ref,
       tags: [{
-        key: 'Name', value: namePrefix+"-DevRouteDomain",
+        key: 'Name',
+        value: namePrefix+"_DevRouteDomain",
       }],
     });
 
@@ -76,7 +76,7 @@ export class InfraStack extends cdk.Stack {
     if ( infraDef.vpcCidr ) {
 
       const vpc = new ec2.Vpc(this, 'vpc', {
-        vpcName: namePrefix+'-vpc',
+        vpcName: namePrefix+'_vpc',
         maxAzs: 2,
         ipAddresses: ec2.IpAddresses.cidr(infraDef.vpcCidr),
         createInternetGateway: false,
@@ -92,16 +92,16 @@ export class InfraStack extends cdk.Stack {
         destination: ec2.FlowLogDestination.toS3()
       });
 
-      // Create Transit Gateway Attachment for private subnets
-      const vpcSubnets = vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED
-      })
+      // vpcSubnets
+      const vpcSubnets = vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED })
 
       // If zoneName is provided, enable Private Hosted Zone
-      if ( infraDef.zoneName ) {
-        const privateHostedZone = new route53.PrivateHostedZone(this, 'HostedZone', {
-          zoneName: infraDef.zoneName,
-          vpc: vpc
+      if ( infraDef.zoneNames.length > 0 ) {
+        infraDef.zoneNames.forEach((zoneName) => {
+          const privateHostedZone = new route53.PrivateHostedZone(this, 'HostedZone_'+zoneName, {
+            zoneName: zoneName,
+            vpc: vpc
+          });
         });
 
         const route53InboundSG = new ec2.SecurityGroup(this, 'route53InboundSG',{
@@ -121,10 +121,9 @@ export class InfraStack extends cdk.Stack {
         // Creates a Route53 Resolver endpoint
         const cfnResolverEndpoint = new route53resolver.CfnResolverEndpoint(this, 'resolverEndpoint', {
           direction: 'inbound',
-          //ipAddresses: vpcSubnets.subnetIds.map((sn) => ({ subnetId: sn, ip: "ip" })),
           ipAddresses: vpcSubnets.subnetIds.map((sn) => ({ subnetId: sn })),
           securityGroupIds: [route53InboundSG.securityGroupId],
-          name: namePrefix+'-endpoint',
+          name: namePrefix+'_endpoint',
         });
       }
 
@@ -141,7 +140,7 @@ export class InfraStack extends cdk.Stack {
         transportTransitGatewayAttachmentId: transitGatewayAttachment.ref,
         tags: [{
           key: 'Name',
-          value: namePrefix+'-connect',
+          value: namePrefix+'_connect',
         }],
       });
 
@@ -162,6 +161,9 @@ export class InfraStack extends cdk.Stack {
         transitGatewayRouteTableId: devRouteTable.ref,
       });
       */
+     new cdk.CfnOutput(this, 'vpcId', {
+      value: vpc.vpcId,
+     })
 
     }
   }

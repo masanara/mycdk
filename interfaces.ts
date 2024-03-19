@@ -14,6 +14,6 @@ export interface IInfraDef {
     "vpcCidr": string,
     "tgwCidr": string,
     "trustAccounts": string[],
-    "zoneName": string,
+    "zoneNames": string[],
     "srcIps": string[],
 };
