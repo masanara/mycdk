@@ -10,7 +10,6 @@ const path = ('../config/infra.json');
 const infraDef: IInfraDef = require(path);
 const namePrefix = infraDef.namePrefix;
 
-const app = new cdk.App()
 export class InfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);

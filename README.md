@@ -10,12 +10,56 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * cdk synth KeyCloakStack
 * cdk synth InfraStack
 
+## Config file for InfraStack (config/infra.json)
 
-## Store parameter to config files
+### Create Transit Gateway Only
 
-### config file for IamStack
+- namePrefix : Name prefix for resources which are created by cdk
+- bgpAsn : BGP AS number for Transit Gateway
+- tgwCidr : CIDR for Transit Gateway
+- trustAccounts[Array] : AWS Account IDs which is shared Transit Gateway resource from this account
 
-- config/users.json
+```
+{
+  "namePrefix": "test-prefix",
+  "bgpAsn": 64513,
+  "tgwCidr": "172.18.1.0/24",
+  "trustAccounts": [
+    "012345678901",
+    "001234567890"
+  ]
+}
+```
+
+### Create Transit Gateway and shared service vpc
+
+- vpcCidr : Shared Service VPC Cidr
+- zoneNames[Array] : Zone names for Route53 private hosted zone
+- srcIps[Array] : permit source addresses for Route53 Resolver
+
+```
+{
+  "namePrefix": "test-prefix",
+  "bgpAsn": 64513,
+  "tgwCidr": "172.18.1.0/24",
+  "trustAccounts": [
+    "012345678901",
+    "001234567890"
+  ],
+  "vpcCidr": "192.168.0.0/22",
+  "zoneNames": [
+    "awscloud1.local",
+    "awscloud2.local"
+  ],
+  "srcIps": [
+    "192.168.1.1/32",
+    "192.168.2.1/32",
+    "192.168.40.0/24"
+  ]
+}
+```
+
+## Config file for IamStack (config/users.json)
 
 ```
 [
@@ -67,30 +111,4 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
     ]
   }
 ]
-```
-
-### config file for InfraStack
-
-- config/infra.json
-
-```
-{
-  "namePrefix": "test-prefix",
-  "bgpAsn": 64513,
-  "vpcCidr": "192.168.0.0/22",
-  "tgwCidr": "172.18.1.0/24",
-  "trustAccounts": [
-    "012345678901",
-    "001234567890"
-  ],
-  "srcIps": [
-    "192.168.1.1/32",
-    "192.168.2.1/32",
-    "192.168.40.0/24"
-  ],
-  "zoneNames": [
-    "awscloud1.local",
-    "awscloud2.local"
-  ]
-}
 ```

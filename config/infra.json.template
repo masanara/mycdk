@@ -1,19 +1,19 @@
 {
   "namePrefix": "test-prefix",
   "bgpAsn": 64513,
-  "vpcCidr": "192.168.0.0/22",
   "tgwCidr": "172.18.1.0/24",
   "trustAccounts": [
     "012345678901",
     "001234567890"
   ],
+  "vpcCidr": "192.168.0.0/22",
+  "zoneNames": [
+    "awscloud1.local",
+    "awscloud2.local"
+  ],
   "srcIps": [
     "192.168.1.1/32",
     "192.168.2.1/32",
     "192.168.40.0/24"
-  ],
-  "zoneNames": [
-    "awscloud1.local",
-    "awscloud2.local"
   ]
 }
