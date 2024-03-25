@@ -6,7 +6,7 @@ import { aws_ram as ram } from 'aws-cdk-lib';
 import { Construct, ConstructOrder } from 'constructs';
 import { IInfraDef } from '../interfaces';
 
-const path=('../config/infra.json');
+const path = ('../config/infra.json');
 const infraDef: IInfraDef = require(path);
 const namePrefix = infraDef.namePrefix;
 
@@ -28,14 +28,14 @@ export class InfraStack extends cdk.Stack {
       multicastSupport: 'disable',
       tags: [{
         key: 'Name',
-        value: namePrefix+'_tgw',
+        value: namePrefix + '_tgw',
       }],
-      transitGatewayCidrBlocks: [ infraDef.tgwCidr ],
+      transitGatewayCidrBlocks: [infraDef.tgwCidr],
     });
 
     const cfnResourceShare = new ram.CfnResourceShare(this, 'ResourceShare', {
       name: 'tgwShare-ram',
-      resourceArns:[
+      resourceArns: [
         `arn:aws:ec2:${this.region}:${this.account}:transit-gateway/${transitGateway.ref}`,
       ],
       principals: infraDef.trustAccounts
@@ -51,7 +51,7 @@ export class InfraStack extends cdk.Stack {
       transitGatewayId: transitGateway.ref,
       tags: [{
         key: 'Name',
-        value: namePrefix+"_SharedServiceRouteDomain",
+        value: namePrefix + "_SharedServiceRouteDomain",
       }],
     });
 
@@ -59,7 +59,7 @@ export class InfraStack extends cdk.Stack {
       transitGatewayId: transitGateway.ref,
       tags: [{
         key: 'Name',
-        value: namePrefix+"_ProdRouteDomain",
+        value: namePrefix + "_ProdRouteDomain",
       }],
     });
 
@@ -67,16 +67,16 @@ export class InfraStack extends cdk.Stack {
       transitGatewayId: transitGateway.ref,
       tags: [{
         key: 'Name',
-        value: namePrefix+"_DevRouteDomain",
+        value: namePrefix + "_DevRouteDomain",
       }],
     });
 
     // IF vpcCidr is provided, Create VPC and related resources
     // Crate VPC and enable VPC flowlog
-    if ( infraDef.vpcCidr ) {
+    if (infraDef.vpcCidr) {
 
       const vpc = new ec2.Vpc(this, 'vpc', {
-        vpcName: namePrefix+'_vpc',
+        vpcName: namePrefix + '_vpc',
         maxAzs: 2,
         ipAddresses: ec2.IpAddresses.cidr(infraDef.vpcCidr),
         createInternetGateway: false,
@@ -88,7 +88,8 @@ export class InfraStack extends cdk.Stack {
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         }]
       });
-      vpc.addFlowLog('FlowLogsToS3',{
+
+      vpc.addFlowLog('FlowLogsToS3', {
         destination: ec2.FlowLogDestination.toS3()
       });
 
@@ -96,36 +97,38 @@ export class InfraStack extends cdk.Stack {
       const vpcSubnets = vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED })
 
       // If zoneName is provided, enable Private Hosted Zone
-      if ( infraDef.zoneNames.length > 0 ) {
+      if (infraDef.zoneNames.length > 0) {
         infraDef.zoneNames.forEach((zoneName) => {
-          const privateHostedZone = new route53.PrivateHostedZone(this, 'HostedZone_'+zoneName, {
+          const privateHostedZone = new route53.PrivateHostedZone(this, 'HostedZone_' + zoneName, {
             zoneName: zoneName,
             vpc: vpc
           });
         });
 
-        const route53InboundSG = new ec2.SecurityGroup(this, 'route53InboundSG',{
+        // Creates a Security Group for Route53 Resolver endpoint
+        const route53InboundSG = new ec2.SecurityGroup(this, 'route53InboundSG', {
           vpc: vpc,
           description: 'Allow access to the DNS',
           allowAllOutbound: true,
         });
 
-        // If srcIps for DNS is provided, add ingress rules for DNS
-        if ( infraDef.srcIps ){
+        // If srcIps for DNS is provided, add ingress rules for Security Group
+        if (infraDef.srcIps) {
           for (const srcIp of infraDef.srcIps) {
-            route53InboundSG.addIngressRule(ec2.Peer.ipv4(srcIp), ec2.Port.tcp(53),'Allow TCP 53');
-            route53InboundSG.addIngressRule(ec2.Peer.ipv4(srcIp), ec2.Port.udp(53),'Allow UDP 53');
-          }
-        }
+            route53InboundSG.addIngressRule(ec2.Peer.ipv4(srcIp), ec2.Port.tcp(53), 'Allow TCP 53');
+            route53InboundSG.addIngressRule(ec2.Peer.ipv4(srcIp), ec2.Port.udp(53), 'Allow UDP 53');
+          };
+        };
 
         // Creates a Route53 Resolver endpoint
-        const cfnResolverEndpoint = new route53resolver.CfnResolverEndpoint(this, 'resolverEndpoint', {
+        const resolverEndpoint = new route53resolver.CfnResolverEndpoint(this, 'resolverEndpoint', {
           direction: 'inbound',
           ipAddresses: vpcSubnets.subnetIds.map((sn) => ({ subnetId: sn })),
           securityGroupIds: [route53InboundSG.securityGroupId],
-          name: namePrefix+'_endpoint',
+          name: namePrefix + '_endpoint',
         });
-      }
+
+      };
 
       // Create Transit Gateway Attachment for private subnets
       const transitGatewayAttachment = new ec2.CfnTransitGatewayAttachment(this, 'transitGatewayAttachment', {
@@ -140,7 +143,7 @@ export class InfraStack extends cdk.Stack {
         transportTransitGatewayAttachmentId: transitGatewayAttachment.ref,
         tags: [{
           key: 'Name',
-          value: namePrefix+'_connect',
+          value: namePrefix + '_connect',
         }],
       });
 
@@ -150,20 +153,13 @@ export class InfraStack extends cdk.Stack {
         transitGatewayRouteTableId: serviceRouteTable.ref,
       });
 
-      /*
-      const tgwRouteTableAssociationProd = new ec2.CfnTransitGatewayRouteTableAssociation(this, 'tgwRtbAssociationProd', {
-        transitGatewayAttachmentId: transitGatewayAttachment.ref,
-        transitGatewayRouteTableId: prodRouteTable.ref,
-      });
-
-      const tgwRouteTableAssociationDev = new ec2.CfnTransitGatewayRouteTableAssociation(this, 'tgwRtbAssociationDev', {
-        transitGatewayAttachmentId: transitGatewayAttachment.ref,
-        transitGatewayRouteTableId: devRouteTable.ref,
-      });
-      */
-     new cdk.CfnOutput(this, 'vpcId', {
-      value: vpc.vpcId,
-     })
+      // Output
+      new cdk.CfnOutput(this, 'vpcId', {
+        value: vpc.vpcId,
+      })
+      new cdk.CfnOutput(this, 'transitGatewayId', {
+        value: transitGateway.attrId,
+      })
 
     }
   }
