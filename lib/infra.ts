@@ -15,8 +15,7 @@ export class InfraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create Transit Gateway and related resources
-    // Reference https://docs.aws.amazon.com/cdk/api/v2/docs/aws-cdk-lib.aws_ec2.CfnTransitGateway.html
+    // Create transitGateway
     const transitGateway = new ec2.CfnTransitGateway(this, 'transitGateway', {
       amazonSideAsn: infraDef.bgpAsn,
       autoAcceptSharedAttachments: 'disable',
@@ -33,19 +32,31 @@ export class InfraStack extends cdk.Stack {
       transitGatewayCidrBlocks: [infraDef.tgwCidr],
     });
 
-    const cfnResourceShare = new ram.CfnResourceShare(this, 'ResourceShare', {
-      name: 'tgwShare-ram',
-      resourceArns: [
-        `arn:aws:ec2:${this.region}:${this.account}:transit-gateway/${transitGateway.ref}`,
-      ],
-      principals: infraDef.trustAccounts
-    })
+    // IF trustAccounts is provided, share transitGateway to accounts
+    if ( infraDef.trustAccounts && infraDef.trustAccounts.length > 0 ) {
+
+      // Check if trustAccounts contains the account id of execution env
+      infraDef.trustAccounts.forEach((trustAccount) => {
+        if (( trustAccount == this.account )) {
+          throw new Error('trustAccounts must not contain self account id.')
+        }
+      });
+
+      // Create Transit Gateway Resource Share
+      const cfnResourceShare = new ram.CfnResourceShare(this, 'ResourceShare', {
+        name: 'tgwShare-ram',
+        resourceArns: [
+          `arn:aws:ec2:${this.region}:${this.account}:transit-gateway/${transitGateway.ref}`,
+        ],
+        principals: infraDef.trustAccounts
+      });
+
+    };
 
     // Create Transit Gateway Route Table
     // - SharedServiceRouteTable
     // - ProdRouteTable
     // - DevRouteTable
-    // Reference https://github.com/aws-samples/aws-transit-gateway-egress-vpc-pattern/blob/master/lib/egress_vpc-tg-demo-stack.ts
 
     const serviceRouteTable = new ec2.CfnTransitGatewayRouteTable(this, "TGRouteTableService", {
       transitGatewayId: transitGateway.ref,
@@ -156,10 +167,10 @@ export class InfraStack extends cdk.Stack {
       // Output
       new cdk.CfnOutput(this, 'vpcId', {
         value: vpc.vpcId,
-      })
+      });
       new cdk.CfnOutput(this, 'transitGatewayId', {
         value: transitGateway.attrId,
-      })
+      });
 
     }
   }
