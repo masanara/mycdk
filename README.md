@@ -13,6 +13,8 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ## Store parameter to config files
 
+### config file for IamStack
+
 - config/users.json
 
 ```
@@ -67,6 +69,8 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 ]
 ```
 
+### config file for InfraStack
+
 - config/infra.json
 
 ```
@@ -84,6 +88,9 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
     "192.168.2.1/32",
     "192.168.40.0/24"
   ],
-  "zoneName": "awscloud.local"
+  "zoneNames": [
+    "awscloud1.local",
+    "awscloud2.local"
+  ]
 }
 ```
