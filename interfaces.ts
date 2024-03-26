@@ -12,7 +12,7 @@ export interface IInfraDef {
     "namePrefix": string,
     "bgpAsn": number,
     "vpcCidr": string,
-    "tgwCidr": string,
+    "tgwCidrs": string[],
     "trustAccounts": string[],
     "zoneNames": string[],
     "srcIps": string[],

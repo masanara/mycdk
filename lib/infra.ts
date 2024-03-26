@@ -28,8 +28,12 @@ export class InfraStack extends cdk.Stack {
         key: 'Name',
         value: namePrefix + '_tgw',
       }],
-      transitGatewayCidrBlocks: [infraDef.tgwCidr],
     });
+
+    // If tgwCidrs is provided, add TransitGatewayCidrBlocks to transitGateway
+    if (infraDef.tgwCidrs && infraDef.tgwCidrs.length > 0 ) {
+      transitGateway.addPropertyOverride('TransitGatewayCidrBlocks', infraDef.tgwCidrs);
+    };
 
     // IF trustAccounts is provided, share transitGateway to accounts
     if ( infraDef.trustAccounts && infraDef.trustAccounts.length > 0 ) {
