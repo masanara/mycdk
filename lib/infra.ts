@@ -111,7 +111,7 @@ export class InfraStack extends cdk.Stack {
       const vpcSubnets = vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED })
 
       // If zoneName is provided, enable Private Hosted Zone
-      if (infraDef.zoneNames.length > 0) {
+      if (infraDef.zoneNames && infraDef.zoneNames.length > 0) {
         infraDef.zoneNames.forEach((zoneName) => {
           const privateHostedZone = new route53.PrivateHostedZone(this, 'HostedZone_' + zoneName, {
             zoneName: zoneName,

@@ -16,14 +16,12 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 - namePrefix : Name prefix for resources which are created by cdk
 - bgpAsn : BGP AS number for Transit Gateway
-- tgwCidr : CIDR for Transit Gateway
 - trustAccounts[Array] : AWS Account IDs which is shared Transit Gateway resource from this account
 
 ```
 {
   "namePrefix": "test-prefix",
   "bgpAsn": 64513,
-  "tgwCidr": "172.18.1.0/24",
   "trustAccounts": [
     "012345678901",
     "001234567890"
@@ -33,18 +31,22 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
 ### Create Transit Gateway and shared service vpc
 
-- vpcCidr : Shared Service VPC Cidr
-- zoneNames[Array] : Zone names for Route53 private hosted zone
-- srcIps[Array] : permit source addresses for Route53 Resolver
+- tgwCidrs[Array] : Transit Gateway Cidrs (option)
+- vpcCidr : Shared Service VPC Cidr (option)
+- zoneNames[Array] : Zone names for Route53 private hosted zone (option)
+- srcIps[Array] : permit source addresses for Route53 Resolver (option)
 
 ```
 {
   "namePrefix": "test-prefix",
   "bgpAsn": 64513,
-  "tgwCidr": "172.18.1.0/24",
   "trustAccounts": [
     "012345678901",
     "001234567890"
+  ],
+  "tgwCidrs": [
+    "172.18.1.0/24",
+    "172.18.2.0/24"
   ],
   "vpcCidr": "192.168.0.0/22",
   "zoneNames": [
